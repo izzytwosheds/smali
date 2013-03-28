@@ -316,6 +316,21 @@ public class JumboStringConversionTest {
     }
 
     @Test
+    public void testGotoToGoto16NoJumbo() {
+        ArrayList<ImmutableInstruction> instructions = Lists.newArrayList();
+        instructions.add(new MockImmutableInstruction10t(Opcode.GOTO, 128));
+        for (int i=0;i<128;i++) {
+            instructions.add(new ImmutableInstruction10x(Opcode.NOP));
+        }
+
+        ImmutableMethodImplementation methodImplementation = new ImmutableMethodImplementation(1, instructions, null, null);
+        InstructionWriteUtil writeUtil = new InstructionWriteUtil(methodImplementation, mStringPool);
+
+        Instruction instr = writeUtil.getInstructions().iterator().next();
+        Assert.assertEquals("goto was not converted to goto/16 properly (no jumbo case)", instr.getOpcode(), Opcode.GOTO_16);
+    }
+
+    @Test
     public void testGoto16ToGoto32() {
         ArrayList<ImmutableInstruction> instructions = Lists.newArrayList();
         instructions.add(new ImmutableInstruction20t(Opcode.GOTO_16, Short.MAX_VALUE));
@@ -329,6 +344,21 @@ public class JumboStringConversionTest {
 
         Instruction instr = writeUtil.getInstructions().iterator().next();
         Assert.assertEquals("goto/16 was not converted to goto/32 properly", instr.getOpcode(), Opcode.GOTO_32);
+    }
+
+    @Test
+    public void testGoto16ToGoto32NoJumbo() {
+        ArrayList<ImmutableInstruction> instructions = Lists.newArrayList();
+        instructions.add(new MockImmutableInstruction20t(Opcode.GOTO_16, Short.MAX_VALUE+1));
+        for (int i=0;i<Short.MAX_VALUE+1;i++) {
+            instructions.add(new ImmutableInstruction10x(Opcode.NOP));
+        }
+
+        ImmutableMethodImplementation methodImplementation = new ImmutableMethodImplementation(1, instructions, null, null);
+        InstructionWriteUtil writeUtil = new InstructionWriteUtil(methodImplementation, mStringPool);
+
+        Instruction instr = writeUtil.getInstructions().iterator().next();
+        Assert.assertEquals("goto/16 was not converted to goto/32 properly (no jumbo case)", instr.getOpcode(), Opcode.GOTO_32);
     }
 
     @Test

@@ -32,6 +32,7 @@
 package org.jf.dexlib2.writer.util;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.jf.dexlib2.Format;
 import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.ReferenceType;
@@ -67,6 +68,9 @@ public class InstructionWriteUtil {
     public InstructionWriteUtil(@Nonnull MethodImplementation methodImpl, @Nonnull StringPool stringPool) {
         this.stringPool = stringPool;
         methodImplementation = methodImpl;
+
+        codeOffsetShifts = Lists.newArrayList();
+        offsetToNewInstructionMap = Maps.newHashMap();
         
         calculateMaxOutParamCount();
         findCodeOffsetShifts();
@@ -147,21 +151,11 @@ public class InstructionWriteUtil {
                 ReferenceInstruction refInstr = (ReferenceInstruction) instruction;
                 int referenceIndex = stringPool.getIndex((StringReference)refInstr.getReference());
                 if (referenceIndex > 0xFFFF) {
-                    if (codeOffsetShifts == null) {
-                        codeOffsetShifts = new ArrayList<Integer>();
-                    }
-                    if (offsetToNewInstructionMap == null) {
-                    	offsetToNewInstructionMap = new HashMap<Integer,Format>();
-                    }
                     codeOffsetShifts.add(currentCodeOffset+instruction.getCodeUnits());
                     offsetToNewInstructionMap.put(currentCodeOffset, Opcode.CONST_STRING_JUMBO.format);
                 }
             }
             currentCodeOffset += instruction.getCodeUnits();
-        }
-
-        if (codeOffsetShifts == null) {
-            return;
         }
 
         // next, let's check if this caused any conversions in goto instructions due to changes in offset values
